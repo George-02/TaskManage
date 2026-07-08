@@ -1,0 +1,11 @@
+node_modules/
+dist/
+data/*.db
+*.log
+.DS_Store
+Thumbs.db
+.env
+.env.*
+.agents/
+.codex/
+client/dist/
