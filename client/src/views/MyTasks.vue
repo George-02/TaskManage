@@ -215,6 +215,19 @@ const points = ref({
 })
 const pointsFlow = ref([])
 
+// 获取北京时间日期
+function getBeijingDate() {
+  const now = new Date()
+  const offset = 8 * 60 // 北京时间 UTC+8
+  const localOffset = now.getTimezoneOffset()
+  const diff = offset + localOffset
+  const beijingTime = new Date(now.getTime() + diff * 60 * 1000)
+  const year = beijingTime.getFullYear()
+  const month = String(beijingTime.getMonth() + 1).padStart(2, '0')
+  const day = String(beijingTime.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 // 当前月份标签
 const currentMonthLabel = computed(() => {
   const date = currentDate.value
@@ -257,7 +270,7 @@ function isCheckedDate(dateStr) {
 
 // 检查是否是今天
 function isToday(dateStr) {
-  const today = new Date().toISOString().split('T')[0]
+  const today = getBeijingDate()
   return dateStr === today
 }
 
@@ -300,7 +313,7 @@ function formatTime(timeStr) {
 async function loadCheckins() {
   try {
     checkedDates.value = await checkinApi.getCheckins(userStore.userId)
-    const today = new Date().toISOString().split('T')[0]
+    const today = getBeijingDate()
     todayChecked.value = checkedDates.value.includes(today)
   } catch (error) {
     console.error('获取打卡记录失败:', error)
@@ -314,7 +327,7 @@ async function handleCheckin() {
     await checkinApi.checkin()
     ElMessage.success('🎉 打卡成功！+5积分')
     todayChecked.value = true
-    const today = new Date().toISOString().split('T')[0]
+    const today = getBeijingDate()
     checkedDates.value.push(today)
     loadPoints() // 刷新积分
   } catch (error) {

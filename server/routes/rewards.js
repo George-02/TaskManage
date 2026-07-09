@@ -3,6 +3,22 @@ const router = express.Router();
 const db = require('../db');
 const authMiddleware = require('../middleware/auth');
 
+// 获取北京时间工具函数
+function getBeijingDateTime() {
+  const now = new Date();
+  const offset = 8 * 60; // 北京时间 UTC+8
+  const localOffset = now.getTimezoneOffset();
+  const diff = offset + localOffset;
+  const beijingTime = new Date(now.getTime() + diff * 60 * 1000);
+  const year = beijingTime.getFullYear();
+  const month = String(beijingTime.getMonth() + 1).padStart(2, '0');
+  const day = String(beijingTime.getDate()).padStart(2, '0');
+  const hours = String(beijingTime.getHours()).padStart(2, '0');
+  const minutes = String(beijingTime.getMinutes()).padStart(2, '0');
+  const seconds = String(beijingTime.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 // GET /api/rewards - 获取所有奖励列表
 router.get('/', (req, res) => {
   try {
@@ -52,9 +68,10 @@ router.post('/redeem', authMiddleware, (req, res) => {
     }
 
     // 创建兑换记录
+    const now = getBeijingDateTime();
     db.run(
-      'INSERT INTO redemptions (user_id, reward_id, points_cost) VALUES (?, ?, ?)',
-      [userId, rewardId, reward.points_cost]
+      'INSERT INTO redemptions (user_id, reward_id, points_cost, created_time) VALUES (?, ?, ?, ?)',
+      [userId, rewardId, reward.points_cost, now]
     );
 
     res.status(201).json({
@@ -115,9 +132,10 @@ router.put('/use/:id', authMiddleware, (req, res) => {
     }
 
     // 标记为已使用
+    const now = getBeijingDateTime();
     db.run(
-      "UPDATE redemptions SET is_used = 1, used_time = datetime('now', 'localtime') WHERE id = ?",
-      [id]
+      "UPDATE redemptions SET is_used = 1, used_time = ? WHERE id = ?",
+      [now, id]
     );
 
     res.json({ message: '物品已使用' });

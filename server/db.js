@@ -2,6 +2,34 @@ const initSqlJs = require('sql.js');
 const path = require('path');
 const fs = require('fs');
 
+// 获取北京时间工具函数
+function getBeijingTime() {
+  const now = new Date();
+  const offset = 8 * 60; // 北京时间 UTC+8
+  const localOffset = now.getTimezoneOffset(); // 本地时区偏移（分钟）
+  const diff = offset + localOffset; // 计算差值
+  return new Date(now.getTime() + diff * 60 * 1000);
+}
+
+function getBeijingDate() {
+  const beijingTime = getBeijingTime();
+  const year = beijingTime.getFullYear();
+  const month = String(beijingTime.getMonth() + 1).padStart(2, '0');
+  const day = String(beijingTime.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getBeijingDateTime() {
+  const beijingTime = getBeijingTime();
+  const year = beijingTime.getFullYear();
+  const month = String(beijingTime.getMonth() + 1).padStart(2, '0');
+  const day = String(beijingTime.getDate()).padStart(2, '0');
+  const hours = String(beijingTime.getHours()).padStart(2, '0');
+  const minutes = String(beijingTime.getMinutes()).padStart(2, '0');
+  const seconds = String(beijingTime.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 // 确保 data 目录存在
 const dataDir = path.join(__dirname, '..', 'data');
 if (!fs.existsSync(dataDir)) {
@@ -196,5 +224,8 @@ module.exports = {
   initDatabase,
   query,
   run,
-  get
+  get,
+  getBeijingTime,
+  getBeijingDate,
+  getBeijingDateTime
 };

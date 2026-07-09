@@ -3,6 +3,22 @@ const router = express.Router();
 const db = require('../db');
 const authMiddleware = require('../middleware/auth');
 
+// 获取北京时间工具函数
+function getBeijingDateTime() {
+  const now = new Date();
+  const offset = 8 * 60; // 北京时间 UTC+8
+  const localOffset = now.getTimezoneOffset();
+  const diff = offset + localOffset;
+  const beijingTime = new Date(now.getTime() + diff * 60 * 1000);
+  const year = beijingTime.getFullYear();
+  const month = String(beijingTime.getMonth() + 1).padStart(2, '0');
+  const day = String(beijingTime.getDate()).padStart(2, '0');
+  const hours = String(beijingTime.getHours()).padStart(2, '0');
+  const minutes = String(beijingTime.getMinutes()).padStart(2, '0');
+  const seconds = String(beijingTime.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 // GET /api/tasks/:userId - 获取指定用户的任务
 router.get('/:userId', (req, res) => {
   try {
@@ -28,9 +44,10 @@ router.post('/', authMiddleware, (req, res) => {
       return res.status(400).json({ error: '任务标题不能为空' });
     }
 
+    const now = getBeijingDateTime();
     db.run(
-      'INSERT INTO tasks (user_id, title, description) VALUES (?, ?, ?)',
-      [userId, title.trim(), description || null]
+      'INSERT INTO tasks (user_id, title, description, created_time) VALUES (?, ?, ?, ?)',
+      [userId, title.trim(), description || null, now]
     );
 
     // 获取刚创建的任务
@@ -68,9 +85,10 @@ router.put('/:id/complete', authMiddleware, (req, res) => {
     }
 
     // 完成任务
+    const now = getBeijingDateTime();
     db.run(
-      "UPDATE tasks SET status = 'done', completed_time = datetime('now', 'localtime') WHERE id = ?",
-      [id]
+      "UPDATE tasks SET status = 'done', completed_time = ? WHERE id = ?",
+      [now, id]
     );
 
     const updatedTask = db.get('SELECT * FROM tasks WHERE id = ?', [id]);
